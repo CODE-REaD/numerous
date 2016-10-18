@@ -95,6 +95,7 @@ public class numerous extends Activity {
 //    int rotateFrameBy = 90;
     int rotateFrameBy = 20;
     int pivotFrameBy, slideFrameBy;
+    int ifSlideFactor = 1;
     boolean frameIsRotating = false;
     int lmXtoLeft;
     int globalShrinkToPercent = 100 ;  // Divide size of ALL views to this for "shrunken" overview
@@ -176,7 +177,7 @@ public class numerous extends Activity {
         }
 
         pivotFrameBy = displayWidth / 2;
-        slideFrameBy = displayWidth / 2;
+        slideFrameBy = -(displayWidth / 2);
         displayShortSide = (displayWidth <= displayHeight) ? displayWidth : displayHeight;
 
         ViewGroup.LayoutParams rbParams = rainbowBG.getLayoutParams();
@@ -465,7 +466,7 @@ public class numerous extends Activity {
         // for diagnostics only:
         rainbowBG.setScaleX(1);
         rainbowBG.setScaleY(1);
-        rainbowBG.setX(displayWidth / 2 - displayShortSide / 2);
+//        rainbowBG.setX(displayWidth / 2 - displayShortSide / 2);
         numbersView.setScaleX(.7f);
         numbersView.setScaleY(.7f);
 //        numbersView.setPivotX(-displayWidth);
@@ -591,7 +592,8 @@ public class numerous extends Activity {
         // todo: and/or "slide" entire innerFrame to left (w/rotate in) and back to right (w/rotate out)
         innerFrame.animate().rotationYBy(rotateFrameBy * ifDirection)
 //                .scaleX(1.9f * ifDirection * -1).scaleY(1.9f * ifDirection * -1)
-                .x(slideFrameBy * ifDirection)
+//                .x(slideFrameBy * ifDirection)
+                .x(slideFrameBy * ifSlideFactor)
                 .setDuration(2000)
                 .setStartDelay(720)
 //                .setInterpolator(new LinearInterpolator())  // linear is used by default
@@ -610,12 +612,13 @@ public class numerous extends Activity {
                             }
                         });
                     }
-                }, 6000);
+                }, 1000);
             }
             public void onAnimationCancel(Animator animator) { }
             public void onAnimationRepeat(Animator animator) { }
         });
         ifDirection *= -1;  // reverse each time
+        ifSlideFactor = (ifSlideFactor == 1) ? 0 : 1; // toggle between 1 and 0
     }
 
     //<editor-fold desc="Description">
