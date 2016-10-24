@@ -35,6 +35,7 @@ import android.os.Handler;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,12 +43,15 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
+import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
+
+//import static java.lang.Math.round;
 
 public class numerous extends Activity {
 
@@ -84,7 +88,7 @@ public class numerous extends Activity {
 //    MyAnimationDrawable animatedNumbers;
     AnimationDrawable animatedNumbers;
     int numZoomCount = 0;
-    int aumX = 0, aumY = 0, umhX = 0, umhY = 0;
+    float aumX = 0, aumY = 0, umhX = 0, umhY = 0;
     final int lmBaseScale = 16; // base scale for lower mask
 //    final int lmBaseScale = 4; // base scale for lower mask
     int aumZoomTo = lmBaseScale;
@@ -98,8 +102,9 @@ public class numerous extends Activity {
     int ifSlideFactor = 1;
     boolean frameIsRotating = false;
     int lmXtoLeft;
-    int globalShrinkToPercent = 100 ;  // Divide size of ALL views to this for "shrunken" overview
+    int globalShrinkToPercent = 100 ;  // Divide size of ALL views to this for "birdsEye" overview
     int ifDirection = -1;  // For reversing innerFrame animations
+    boolean birdsEye = true;
 
     enum specialEffects {
 /*        noEffect, rotateEffect, rotateZoomEffect,
@@ -176,8 +181,6 @@ public class numerous extends Activity {
             displayHeight    = display.getHeight();  // deprecated
         }
 
-        pivotFrameBy = displayWidth / 2;
-        slideFrameBy = -(displayWidth / 2);
         displayShortSide = (displayWidth <= displayHeight) ? displayWidth : displayHeight;
 
         ViewGroup.LayoutParams rbParams = rainbowBG.getLayoutParams();
@@ -196,10 +199,6 @@ public class numerous extends Activity {
 
         // lowerMask is large numbers through which the lower layers may be viewed
         lowerMask.setBackground(getDrawableNumstring(0, Color.WHITE, 1));
-        lowerMask.setScaleX(lmBaseScale);
-        lowerMask.setScaleY(lmBaseScale);
-        lmXtoLeft = (-(displayWidth * lmBaseScale) / 2) + (displayWidth / 2);
-
 
 //        lowerMask.setTranslationX(0);
 //        lowerMask.setTranslationY(0);
@@ -238,8 +237,6 @@ public class numerous extends Activity {
         // memory):
 //        rainbowBG.setScaleX(6);
 //        rainbowBG.setScaleY(6);
-        rainbowBG.setScaleX(4);
-        rainbowBG.setScaleY(4);
 
         // from http://graphics-geek.blogspot.se/2013/02/devbytes-keyframe-animations.html:
         // Create the AnimationDrawable in which we will store all frames of the animation
@@ -422,10 +419,6 @@ public class numerous extends Activity {
             track3.start();
         }
 
-//        rotateColors();
-        // We launch this in advance of other View animations.  Its long StartDelay
-        // ..gives the appearance of coordination with other animations:
-        revealColoration();
 
 /*
         new Handler().postDelayed(new Runnable() {
@@ -456,28 +449,35 @@ public class numerous extends Activity {
 
 //        innerFrame.setScaleX(.7f * innerFrame.getScaleX());
 //        innerFrame.setScaleY(.7f * innerFrame.getScaleY());
-        lowerMask.setScaleX(.7f * lowerMask.getScaleX());
-        lowerMask.setScaleY(.7f * lowerMask.getScaleY());
-//        lowerMask.setPivotX(-displayWidth);
-//        lowerMask.setPivotY(displayHeight / 2);
-//        rainbowBG.setScaleX(.7f);
-//        rainbowBG.setScaleY(.7f);
 
-        // for diagnostics only:
-        rainbowBG.setScaleX(1);
-        rainbowBG.setScaleY(1);
-//        rainbowBG.setX(displayWidth / 2 - displayShortSide / 2);
-        numbersView.setScaleX(.7f);
-        numbersView.setScaleY(.7f);
-//        numbersView.setPivotX(-displayWidth);
-//        numbersView.setPivotY(displayHeight / 2);
-        innerFrame.setPivotX(displayWidth);
-        innerFrame.setPivotY(displayHeight / 2);
+        if (birdsEye) { // Shrink the views to provide elevated overview
+            lowerMask.setScaleX(lmBaseScale * .01f);
+            lowerMask.setScaleY(lmBaseScale * .01f);
+            rainbowBG.setScaleX(1);
+            rainbowBG.setScaleY(1);
+            numbersView.setScaleX(.7f);
+            numbersView.setScaleY(.7f);
+            innerFrame.setPivotX(displayWidth);  // Pivot at right edge of display
+            innerFrame.setPivotY(displayHeight / 2);
+        } else {
+            pivotFrameBy =   displayWidth / 2;
+            slideFrameBy = -(displayWidth / 2);
+            lowerMask.setScaleX(lmBaseScale);
+            lowerMask.setScaleY(lmBaseScale);
+            lmXtoLeft = (-(displayWidth * lmBaseScale) / 2) + (displayWidth / 2);
+            rainbowBG.setScaleX(4);
+            rainbowBG.setScaleY(4);
+            innerFrame.setPivotX(displayWidth);  // Pivot at right edge of display
+            innerFrame.setPivotY(displayHeight / 2);
+        }
+
+        // We launch this in advance of other View animations.  Its long StartDelay
+        // ..gives the appearance of coordination with other animations:
+        revealColoration();
 
 
-        // The initial View animation which chains to the other ones:
-        rotateFrame();
-//        animateLowerMask(); // janky, even w/o audio or other animations
+
+//        rotateFrame();
     }
 
     // N.B.: the only way I've discovered (short of NDK) of reliably choreographing Android views
@@ -487,11 +487,12 @@ public class numerous extends Activity {
     public void revealColoration() {
         // Slowly reveal number coloration:
 //        shaderView.animate().alpha(0).setDuration(8000).setStartDelay(20000);
-        shaderView.animate().alpha(0).setDuration(80).setStartDelay(20);
+        shaderView.animate().alpha(0).setDuration(80).setStartDelay(20)
+                .withLayer();
         shaderView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
             public void onAnimationEnd(Animator animator) {
-                rotateColors();
+//                rotateColors();
                 animateLowerMask(); // janky, even w/o audio or other animations,
                                     // so we show it below nums.
             }
@@ -502,7 +503,8 @@ public class numerous extends Activity {
 
     public void zoomNumbersIn() {
 //            numbersView.animate().scaleX(8f).scaleY(8f).setDuration(3400);
-            numbersView.animate().scaleX(1f).scaleY(1f).setDuration(3400);
+            numbersView.animate().scaleX(1f).scaleY(1f).setDuration(3400)
+                    .withLayer();
         numbersView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
             public void onAnimationEnd(Animator animator) { zoomNumbersOut(); }
@@ -512,7 +514,8 @@ public class numerous extends Activity {
     }
 
     public void zoomNumbersOut() {
-            numbersView.animate().scaleX(1.9f).scaleY(1.9f).setDuration(3400);
+            numbersView.animate().scaleX(1.9f).scaleY(1.9f).setDuration(3400)
+                    .withLayer();
 //            numbersView.animate().scaleX(1f).scaleY(1f).setDuration(3400);
         numbersView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
@@ -524,7 +527,8 @@ public class numerous extends Activity {
 
     public void rotateNumbers() {
             numbersView.animate().rotationBy(rotNumsBy).setDuration(3400)
-                    .setInterpolator(new AccelerateDecelerateInterpolator());
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .withLayer();;
         rotNumsBy *= -1; // alternate cw/ccw
         numbersView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
@@ -536,7 +540,7 @@ public class numerous extends Activity {
 
     public void rotateColors() {
             rainbowBG.animate().rotationBy(rotateColorsBy).setDuration(4000)
-                    .setInterpolator(new AccelerateInterpolator());
+                    .setInterpolator(new AccelerateInterpolator()).withLayer();
         rotateColorsBy *= -1; // alternate cw/ccw
         rainbowBG.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
@@ -547,16 +551,37 @@ public class numerous extends Activity {
     }
 
     public void animateLowerMask() {
-        if (frameIsRotating) return;
-        // Calculate distance in order to scale speed to move:
+//        if (frameIsRotating) return;
+        // Where to slide to: random coordinates between -5 and +5 times displayShortSide:
+        umhX = aumX;
+        umhY = aumY;
         aumX = myRandom.nextInt(10) - 5;
         aumY = myRandom.nextInt(10) - 5;
-        int xDist = aumX - umhX;
-        int yDist = aumY - umhY;
-        int moveDist = (int) Math.hypot(xDist, yDist);
-        int moveDur = moveDist * 1500;
-            lowerMask.animate().x(displayShortSide * aumX)
-                .y(displayShortSide * aumY).setDuration(moveDur).withLayer();
+        // Calculate distance in order to maintain uniform velocity:
+        double xDist    = aumX - umhX;
+        double yDist    = aumY - umhY;
+        double moveDist = Math.hypot(xDist, yDist);
+        long   moveDur  = Math.round(moveDist * 150);
+        Log.e("mDur", moveDur + " mDist " + moveDist
+                + "\nX: " + umhX + " to " + aumX
+                + "\nY: " + umhY + " to " + aumY
+                + "\nxD: " + xDist + " yD: " + yDist);
+
+        lowerMask.animate()
+//                .setStartDelay(3000) // debug
+//                    .x(displayShortSide * aumX)
+//                    .y(displayShortSide * aumY)
+//                    .translationX(displayShortSide * aumX)
+//                    .translationY(displayShortSide * aumY)
+                .x(100 * aumX) // debug
+                .y(100 * aumY) // debug
+//                    .setDuration(moveDur);
+                .setDuration(moveDur)
+                .setInterpolator(new LinearInterpolator())  // This either was not the default on
+                                                            // KK Samsung, or our other setInterpolator
+                                                            // calls caused default to change.
+                .withLayer();
+
         lowerMask.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
             public void onAnimationEnd(Animator animator) { animateLowerMask(); }
@@ -566,7 +591,7 @@ public class numerous extends Activity {
     }
 
     // Apparently if we rotate around Y and are too wide, we exceed upper Z limit.  So try
-    // ..sliding (x) left while moving x pivot to left so that our "top" edge doesn't reach far
+    // ..sliding (x) left while moving x pivot to right so that our (z) "close" edge doesn't reach far
     // .."above" the display:
     public void rotateFrame() {
 //        pivotFrameBy  *= -1;
@@ -584,9 +609,9 @@ public class numerous extends Activity {
 
 //        lowerMask.setX((-(displayWidth * lmBaseScale) / 2) + (displayWidth / 2));
 
-        frameIsRotating = true;  // Prevent other lowerMask animations
+//        frameIsRotating = true;  // Prevent other lowerMask animations
 
-        lowerMask.animate().x(lmXtoLeft).setDuration(3000).start();
+//        lowerMask.animate().x(lmXtoLeft).setDuration(3000).start();
 
         // todo: zoom and rotate at same time (to keep screen filled):
         // todo: and/or "slide" entire innerFrame to left (w/rotate in) and back to right (w/rotate out)
@@ -602,7 +627,7 @@ public class numerous extends Activity {
             public void onAnimationEnd(Animator animator) {
 //                numbersView.setVisibility(View.VISIBLE);
 //                rainbowBG.setVisibility(View.VISIBLE);
-                frameIsRotating = false;
+//                frameIsRotating = false;
                 animateLowerMask();
                 new Handler().postDelayed(new Runnable() {
                     public void run() {
@@ -947,27 +972,33 @@ public class numerous extends Activity {
             public void onAnimationRepeat(Animator animator) { }
         });
     }*/
+    //</editor-fold>
 
     @Override
-    public void onPause() {
-        super.onPause();
+    public void onPause() { // suspend until resume or exit
         isRunning = false;
         numerouSounds.stop(spStream); // Stop any sound currently playing
+        shaderView.animate().cancel();
+        lowerMask.animate().cancel();
+        rainbowBG.animate().cancel();
+        shaderView.animate().cancel();
+        numbersView.animate().cancel();
+        super.onPause();
     }
 
-    @Override
+/*    @Override
     public void onBackPressed() {
+//        isRunning = false;  // stop synth sound ASAP
+//        numerouSounds.stop(spStream); // Stop any sound currently playing
+        finish();
         super.onBackPressed();
-        isRunning = false;  // stop synth sound ASAP
-        numerouSounds.stop(spStream); // Stop any sound currently playing
-    }
+    }*/
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         numerouSounds.stop(spStream); // Stop any sound currently playing
 //        scheduleTaskExecutor.shutdown();
         isRunning = false;
+        super.onDestroy();
     }
-    //</editor-fold>
 }
