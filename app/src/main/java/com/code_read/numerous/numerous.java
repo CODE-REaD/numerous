@@ -434,36 +434,6 @@ public class numerous extends Activity {
         }
 
 
-/*
-        new Handler().postDelayed(new Runnable() {
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        zoomNumbersIn();
-                    }
-                });
-            }
-        }, 4000);
-*/
-
-/*        // Shrink the entire View group for diagnostic purposes:
-        float globalShrinkFactor = globalShrinkToPercent / 100;
-        outerFrame.setScaleX(outerFrame.getScaleX() * globalShrinkFactor);
-        outerFrame.setScaleY(outerFrame.getScaleY() * globalShrinkFactor);
-        innerFrame  .setScaleX(innerFrame  .getScaleX() * globalShrinkFactor);
-        innerFrame  .setScaleY(innerFrame  .getScaleY() * globalShrinkFactor);
-        rainbowBG   .setScaleX(rainbowBG   .getScaleX() * globalShrinkFactor);
-        rainbowBG   .setScaleY(rainbowBG   .getScaleY() * globalShrinkFactor);
-        lowerMask   .setScaleX(lowerMask   .getScaleX() * globalShrinkFactor);
-        lowerMask   .setScaleY(lowerMask   .getScaleY() * globalShrinkFactor);
-        shaderView  .setScaleX(shaderView  .getScaleX() * globalShrinkFactor);
-        shaderView  .setScaleY(shaderView  .getScaleY() * globalShrinkFactor);
-        numbersView .setScaleX(numbersView .getScaleX() * globalShrinkFactor);
-        numbersView .setScaleY(numbersView .getScaleY() * globalShrinkFactor);*/
-
-//        innerFrame.setScaleX(.7f * innerFrame.getScaleX());
-//        innerFrame.setScaleY(.7f * innerFrame.getScaleY());
-
         if (birdsEye) { // Shrink the views to provide elevated overview
             lowerMask.setScaleX(lmBaseScale * .01f);
             lowerMask.setScaleY(lmBaseScale * .01f);
@@ -485,6 +455,20 @@ public class numerous extends Activity {
             innerFrame.setPivotY(displayHeight / 2);
         }
 
+/*
+        new Handler().postDelayed(new Runnable() {
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        zoomNumbersIn();
+                    }
+                });
+            }
+        }, 4000);
+*/
+
+//        lowerMask.setAlpha(0);  For some reason, have to set this in Layout rather than here
+
         // We launch this in advance of other View animations.  Its long StartDelay
         // ..gives the appearance of coordination with other animations:
         revealColoration();
@@ -503,7 +487,8 @@ public class numerous extends Activity {
             public void onAnimationStart(Animator animator) { }
             public void onAnimationEnd(Animator animator) {
                 rotateColors();
-                animateLowerMask(); // janky, even w/o audio or other animations,
+                revealLowerMask();
+//                animateLowerMask(); // janky, even w/o audio or other animations,
                                     // so we show it below nums.
             }
             public void onAnimationCancel(Animator animator) { }
@@ -511,10 +496,14 @@ public class numerous extends Activity {
         });
     }
 
+    public void revealLowerMask() {
+        lowerMask.animate().alpha(1).setDuration(8000).withLayer()
+        .withEndAction(new Runnable() { public void run() { animateLowerMask();}});
+    }
+
     public void zoomNumbersIn() {
-//            numbersView.animate().scaleX(8f).scaleY(8f).setDuration(3400);
-            numbersView.animate().scaleX(1f).scaleY(1f).setDuration(3400)
-                    .withLayer();
+            numbersView.animate().scaleX(8f).scaleY(8f).setDuration(3400);
+/*            numbersView.animate().scaleX(1f).scaleY(1f).setDuration(3400).withLayer(); */
         numbersView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
             public void onAnimationEnd(Animator animator) { zoomNumbersOut(); }
