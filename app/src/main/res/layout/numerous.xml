@@ -40,9 +40,9 @@
                     android:layout_height="match_parent"
                     android:id="@+id/numbersView" />
     </FrameLayout>
-        <FrameLayout
+<!--        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/pictureFrame"
-            />
+            />-->
 </FrameLayout>
