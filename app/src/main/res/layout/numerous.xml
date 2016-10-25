@@ -1,13 +1,13 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:theme="@style/Theme.TransparenC"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:clipToPadding="false"
-    tools:context=".numerous"
-    android:id="@+id/outerFrame"
-    android:clipChildren="false">
+             xmlns:tools="http://schemas.android.com/tools"
+             android:theme="@style/Theme.TransparenC"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:fitsSystemWindows="true"
+             android:clipToPadding="false"
+             tools:context=".numerous"
+             android:id="@+id/outerFrame"
+             android:clipChildren="false">
 
     <!-- Inner FrameLayout: experimental, to stabilize animation: -->
     <FrameLayout
@@ -18,27 +18,28 @@
         android:id="@+id/innerFrame"
         android:background="@android:color/holo_purple">
 
-                <ImageView
-                    android:id="@+id/rainbowBG"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:adjustViewBounds="false"
-                    android:layout_gravity="center"/>
+        <ImageView
+            android:id="@+id/rainbowBG"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="false"
+            android:layout_gravity="center"/>
 
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:id="@+id/shaderView" />
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/shaderView" />
 
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:id="@+id/lowerMask"
-                    android:alpha="0"/>
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/lowerMask"
+            android:alpha="0"/>
 
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:id="@+id/numbersView" />
     </FrameLayout>
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/numbersView" />
+
 </FrameLayout>

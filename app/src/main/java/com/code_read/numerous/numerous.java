@@ -1,5 +1,6 @@
 package com.code_read.numerous;
 
+// todo: landscape / portrait auto switch and accomodation
 // todo: silent during lock screen
 // todo: icons
 // todo: cleanup upon shutdown to invoke GC
@@ -91,7 +92,7 @@ public class numerous extends Activity {
     final int lmBaseScale = 16; // base scale for lower mask
 //    final int lmBaseScale = 4; // base scale for lower mask
     final int aumZoomTo = lmBaseScale;
-    int rotNumsBy;
+    int rotNumsBy, rotNumCt;
     int rotateColorsBy;
 //    int rotateFrameBy = 180;
 //    int rotateFrameBy = 45;
@@ -338,7 +339,10 @@ public class numerous extends Activity {
         aumY = 0;
         umhX = 0;
         umhY = 0;
-        rotNumsBy = 1890;
+//        rotNumsBy = 1890;
+//        rotNumsBy = 270;
+        rotNumsBy = 288;
+        rotNumCt = 0;
         rotateColorsBy = 960;
         frameRotated = false;
 
@@ -472,7 +476,7 @@ public class numerous extends Activity {
         // We launch this in advance of other View animations.  Its long StartDelay
         // ..gives the appearance of coordination with other animations:
         revealColoration();
-        rotateFrame();
+        zoomNumbersIn();
     }
 
     // N.B.: the only way I've discovered (short of NDK) of reliably choreographing Android views
@@ -488,8 +492,6 @@ public class numerous extends Activity {
             public void onAnimationEnd(Animator animator) {
                 rotateColors();
                 revealLowerMask();
-//                animateLowerMask(); // janky, even w/o audio or other animations,
-                                    // so we show it below nums.
             }
             public void onAnimationCancel(Animator animator) { }
             public void onAnimationRepeat(Animator animator) { }
@@ -498,12 +500,15 @@ public class numerous extends Activity {
 
     public void revealLowerMask() {
         lowerMask.animate().alpha(1).setDuration(8000).withLayer()
-        .withEndAction(new Runnable() { public void run() { animateLowerMask();}});
+        .withEndAction(new Runnable() { public void run() { animateLowerMask(); rotateFrame();}});
     }
 
+    //
+    // The next three methods chain to one another for a repeating sequence:
+    //
     public void zoomNumbersIn() {
-            numbersView.animate().scaleX(8f).scaleY(8f).setDuration(3400);
-/*            numbersView.animate().scaleX(1f).scaleY(1f).setDuration(3400).withLayer(); */
+        numbersView.animate().scaleX(20f).scaleY(20f).setDuration(3400)
+                .setStartDelay(1000);
         numbersView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
             public void onAnimationEnd(Animator animator) { zoomNumbersOut(); }
@@ -515,7 +520,6 @@ public class numerous extends Activity {
     public void zoomNumbersOut() {
             numbersView.animate().scaleX(1.9f).scaleY(1.9f).setDuration(3400)
                     .withLayer();
-//            numbersView.animate().scaleX(1f).scaleY(1f).setDuration(3400);
         numbersView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
             public void onAnimationEnd(Animator animator) { rotateNumbers(); }
@@ -526,9 +530,10 @@ public class numerous extends Activity {
 
     public void rotateNumbers() {
             numbersView.animate().rotationBy(rotNumsBy).setDuration(3400)
+                    .setStartDelay(1000)
                     .setInterpolator(new AccelerateDecelerateInterpolator())
-                    .withLayer();;
-        rotNumsBy *= -1; // alternate cw/ccw
+                    .withLayer();
+        if (rotNumCt++ > 4) { rotNumCt = 0; rotNumsBy *= -1; }// reverse direction
         numbersView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
             public void onAnimationEnd(Animator animator) { zoomNumbersIn(); }
@@ -537,6 +542,7 @@ public class numerous extends Activity {
         });
     }
 
+    // Continuously repeating, alternating rotation:
     public void rotateColors() {
             rainbowBG.animate().rotationBy(rotateColorsBy).setDuration(4000)
                     .setInterpolator(new AccelerateInterpolator()).withLayer();
@@ -550,6 +556,8 @@ public class numerous extends Activity {
     }
 
     public void animateLowerMask() {
+        // Jank, even w/o audio or other animations, so we show this layer below nums.
+
         if (frameRotated) return;
 //        int almXoffset = 0;
         umhX = aumX;
@@ -625,7 +633,7 @@ public class numerous extends Activity {
 //                .scaleX(1.9f * ifDirection * -1).scaleY(1.9f * ifDirection * -1)
                 .x(slideFrameBy * ifSlideFactor)
                 .setStartDelay(lmDuration) // wait for lowerMask to move first
-                .setDuration(2000)
+                .setDuration(4000)
                 .setInterpolator(new LinearInterpolator())
                 .setListener(new Animator.AnimatorListener() {
                     public void onAnimationStart(Animator animator) {
