@@ -1,5 +1,8 @@
 package com.code_read.numerous;
 
+// todo: leverage 'z' or cameradistance and/or zoom out outerFrame
+// todo: use trig to calculate max. angles of rotation
+// todo: calibrate rotateFrameBy to landscape / portrait
 // todo: landscape / portrait auto switch and accomodation
 // todo: silent during lock screen
 // todo: icons
@@ -74,7 +77,7 @@ public class numerous extends Activity {
     final Random myRandom = new Random();
     final ImageView[] imageViews = new ImageView[4];
 //    int frameWidth, frameHeight;
-    int displayWidth, displayHeight, displayShortSide;
+    int displayWidth, displayHeight, displayShortSide, displayLongSide;
     View outerFrame, innerFrame, pictureFrame;
     FrameLayout innerFrame2;
     RelativeLayout animationLayout;
@@ -89,7 +92,7 @@ public class numerous extends Activity {
     AnimationDrawable animatedNumbers;
     final int numZoomCount = 0;
     float aumX, aumY, umhX, umhY;
-    final int lmBaseScale = 16; // base scale for lower mask
+    final int lmBaseScale = 9; // base scale for lower mask
 //    final int lmBaseScale = 4; // base scale for lower mask
     final int aumZoomTo = lmBaseScale;
     int rotNumsBy, rotNumCt;
@@ -180,12 +183,25 @@ public class numerous extends Activity {
             displayHeight    = display.getHeight();  // deprecated
         }
 
-        displayShortSide = (displayWidth <= displayHeight) ? displayWidth : displayHeight;
+        displayShortSide = (displayWidth <= displayHeight) ? displayWidth  : displayHeight;
+        displayLongSide  = (displayWidth <= displayHeight) ? displayHeight : displayWidth;
 
+        // Because we rotate them in both landscape and portrait modes,
+        // ..make these layers squares:
         ViewGroup.LayoutParams rbParams = rainbowBG.getLayoutParams();
         rbParams.height = displayShortSide;
         rbParams.width  = displayShortSide;
         rainbowBG.setLayoutParams(rbParams);
+
+        ViewGroup.LayoutParams nvParams = numbersView.getLayoutParams();
+        nvParams.height = displayShortSide * 2;
+        nvParams.width  = displayShortSide * 2;
+        numbersView.setLayoutParams(nvParams);
+
+        ViewGroup.LayoutParams lmParams = lowerMask.getLayoutParams();
+        lmParams.height = displayShortSide * 2;
+        lmParams.width  = displayShortSide * 2;
+        lowerMask.setLayoutParams(lmParams);
 
 //        outerFrame.setBackgroundColor(Color.BLACK);
         outerFrame.setBackgroundColor(Color.GRAY);
@@ -217,7 +233,6 @@ public class numerous extends Activity {
 
         gradientPaint.setShader(new LinearGradient(0, 0, 0, displayShortSide,
                 new int[] {
-                        Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF,
                         Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF,
                         Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF,
                         Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF,
@@ -274,16 +289,18 @@ public class numerous extends Activity {
 
         // If canvas is black, we can use a smaller bitmap:
         if (canvasColor == Color.BLACK) {
-            bitmap = Bitmap.createBitmap(displayWidth, displayHeight, Bitmap.Config.ALPHA_8);
+            bitmap = Bitmap.createBitmap(displayShortSide * 2, displayShortSide * 2, Bitmap.Config.ALPHA_8);
         } else {
-            bitmap = Bitmap.createBitmap(displayWidth, displayHeight, Bitmap.Config.ARGB_8888);
+            bitmap = Bitmap.createBitmap(displayShortSide * 2, displayShortSide * 2, Bitmap.Config.ARGB_8888);
         }
 
         Canvas canvas = new Canvas(bitmap);
         canvas.drawColor(canvasColor);
 
         TextPaint mTextPaint = new TextPaint();
-        mTextPaint.setTextSize((displayShortSide / 35) * textZoom);
+//        mTextPaint.setTextSize((displayShortSide / 35) * textZoom);
+//        mTextPaint.setTextSize((displayShortSide / 50) * textZoom);
+        mTextPaint.setTextSize((displayLongSide / 35) * textZoom); // size much smaller and resolution is poor
         mTextPaint.setTypeface(VGAFixFont);
 
         mTextPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR)); // necessary else drawColor remains
@@ -507,7 +524,7 @@ public class numerous extends Activity {
     // The next three methods chain to one another for a repeating sequence:
     //
     public void zoomNumbersIn() {
-        numbersView.animate().scaleX(20f).scaleY(20f).setDuration(3400)
+        numbersView.animate().scaleX(12f).scaleY(12f).setDuration(3400)
                 .setStartDelay(1000);
         numbersView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
@@ -518,7 +535,7 @@ public class numerous extends Activity {
     }
 
     public void zoomNumbersOut() {
-            numbersView.animate().scaleX(1.9f).scaleY(1.9f).setDuration(3400)
+            numbersView.animate().scaleX(.95f).scaleY(.95f).setDuration(3400)
                     .withLayer();
         numbersView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
@@ -621,14 +638,17 @@ public class numerous extends Activity {
         // todo: zoom and rotate at same time (to keep screen filled):
         // todo: and/or "slide" entire innerFrame to left (w/rotate in) and back to right (w/rotate out)
 
+// this had no effect (n/a in Kitkat?)
+//        float scale = getResources().getDisplayMetrics().density;
+//        outerFrame.setCameraDistance(1280 * scale);
+
         frameRotated = true;          // Limit lowerMask animations
         lowerMask.animate().cancel(); // Move to left so it doesn't disappear on innerFrame rotateY
-        aumX = -(lmBaseScale / 2) - 3; // aumX is used to calc. Durations
+        aumX = -lmBaseScale + 1;      // aumX is used to calc. Durations
         long lmDuration = (long) Math.abs(aumX - umhX) * 500;
         lowerMask.animate()
                 .x(aumX * displayShortSide)
                 .setDuration(lmDuration);
-
         innerFrame.animate().rotationYBy(rotateFrameBy * ifDirection)
 //                .scaleX(1.9f * ifDirection * -1).scaleY(1.9f * ifDirection * -1)
                 .x(slideFrameBy * ifSlideFactor)

@@ -1,21 +1,21 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:tools="http://schemas.android.com/tools"
+             android:id="@+id/outerFrame"
              android:theme="@style/Theme.TransparenC"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              android:fitsSystemWindows="true"
-             android:clipToPadding="false"
              tools:context=".numerous"
-             android:id="@+id/outerFrame"
+             android:clipToPadding="false"
              android:clipChildren="false">
 
     <!-- Inner FrameLayout: experimental, to stabilize animation: -->
     <FrameLayout
+        android:id="@+id/innerFrame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:clipChildren="false"
-        android:id="@+id/innerFrame"
         android:background="@android:color/holo_purple">
 
         <ImageView
@@ -26,20 +26,22 @@
             android:layout_gravity="center"/>
 
         <ImageView
+            android:id="@+id/shaderView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/shaderView" />
+            android:layout_height="match_parent" />
 
         <ImageView
+            android:id="@+id/lowerMask"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/lowerMask"
-            android:alpha="0"/>
+            android:alpha="0"
+            android:layout_gravity="center"/>
 
     </FrameLayout>
     <ImageView
+        android:id="@+id/numbersView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/numbersView" />
+        android:layout_gravity="center"/>
 
 </FrameLayout>
