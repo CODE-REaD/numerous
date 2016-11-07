@@ -54,6 +54,8 @@ import android.widget.RelativeLayout;
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 
+import static com.code_read.numerous.numerous.choreoPhases.*;
+
 //import static java.lang.Math.round;
 
 public class numerous extends Activity {
@@ -108,6 +110,10 @@ public class numerous extends Activity {
     final int globalShrinkToPercent = 100 ;  // Divide size of ALL views to this for "birdsEye" overview
     int ifDirection;  // For reversing innerFrame animations
     final boolean birdsEye = false;
+    enum choreoPhases { start, phase1, phase2, phase3, phase4, phase5, phase6, phase7, noChange, stop }
+    static choreoPhases choreoPhase;
+    boolean revealColorationActive, revealLowerMaskActive, zoomNumbersInActive, zoomNumbersOutActive,
+            rotateNumbersActive, rotateColorsActive, animateLowerMaskActive, rotateFrameActive;
 
     enum specialEffects {
         rotateEffect, rotateZoomEffect, slideEffect
@@ -492,23 +498,73 @@ public class numerous extends Activity {
 
         // We launch this in advance of other View animations.  Its long StartDelay
         // ..gives the appearance of coordination with other animations:
-        revealColoration();
-        zoomNumbersIn();
+//        revealColoration();
+//        zoomNumbersIn();
+        revealColorationActive = revealLowerMaskActive = zoomNumbersInActive = zoomNumbersOutActive =
+                rotateNumbersActive = rotateColorsActive = animateLowerMaskActive = rotateFrameActive
+                        = false;
+        choreoPhase = start;
+        choreo();
     }
+
 
     // N.B.: the only way I've discovered (short of NDK) of reliably choreographing Android views
     // ..is via callbacks.  So we exploit callbacks to create a continous sequence by having
-    // ..the following methods call one another from *.onAnimationEnd():
+    // ..the following methods call one another from *.onAnimationEnd() or *.withEndAction():
+
+    public void choreo() {
+        // Call routines based on phase here:
+        switch (choreoPhase) {
+            case noChange:
+                break;
+            case start:
+                revealColoration();
+                break;
+            case phase1:
+                revealLowerMask();
+                break;
+            case phase2:
+                zoomNumbersIn();
+                break;
+            case phase3:
+                zoomNumbersOut();
+                break;
+            case phase4:
+                rotateNumbers();
+                break;
+            case phase5:
+                rotateColors();
+                break;
+            case phase6:
+                animateLowerMask();
+                break;
+            case phase7:
+                rotateFrame();
+                break;
+        }
+
+        choreoPhase = noChange; // Do nothing until another method sets choreoPhase
+
+        // Listen for change in choreoPhase every 500 ms (2x / second):
+        new Handler().postDelayed(new Runnable() {
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        choreo();
+                    }
+                });
+            }
+        }, 500);
+    }
 
     public void revealColoration() {
         // Slowly reveal number coloration:
 //        shaderView.animate().alpha(0).setDuration(8000).setStartDelay(20000).withLayer();
-        shaderView.animate().alpha(0).setDuration(80).setStartDelay(20).withLayer();
+        shaderView.animate().alpha(0).setDuration(1000).setStartDelay(20).withLayer();
         shaderView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
             public void onAnimationEnd(Animator animator) {
-                rotateColors();
-                revealLowerMask();
+                choreoPhase = phase1;
             }
             public void onAnimationCancel(Animator animator) { }
             public void onAnimationRepeat(Animator animator) { }
@@ -516,30 +572,29 @@ public class numerous extends Activity {
     }
 
     public void revealLowerMask() {
-        lowerMask.animate().alpha(1).setDuration(8000).withLayer()
-        .withEndAction(new Runnable() { public void run() { animateLowerMask(); rotateFrame();}});
+        lowerMask.animate().alpha(1).setDuration(1000).withLayer()
+        .withEndAction(new Runnable() { public void run() { choreoPhase = phase2; }});
     }
 
     //
     // The next three methods chain to one another for a repeating sequence:
     //
     public void zoomNumbersIn() {
-        numbersView.animate().scaleX(12f).scaleY(12f).setDuration(3400)
-                .setStartDelay(1000);
+        numbersView.animate().scaleX(12f).scaleY(12f).setDuration(1000);
         numbersView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
-            public void onAnimationEnd(Animator animator) { zoomNumbersOut(); }
+            public void onAnimationEnd(Animator animator) { choreoPhase = phase3; }
             public void onAnimationCancel(Animator animator) { }
             public void onAnimationRepeat(Animator animator) { }
         });
     }
 
     public void zoomNumbersOut() {
-            numbersView.animate().scaleX(.95f).scaleY(.95f).setDuration(3400)
+            numbersView.animate().scaleX(.95f).scaleY(.95f).setDuration(1000)
                     .withLayer();
         numbersView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
-            public void onAnimationEnd(Animator animator) { rotateNumbers(); }
+            public void onAnimationEnd(Animator animator) { choreoPhase = phase4; }
             public void onAnimationCancel(Animator animator) { }
             public void onAnimationRepeat(Animator animator) { }
         });
@@ -553,7 +608,7 @@ public class numerous extends Activity {
         if (rotNumCt++ > 4) { rotNumCt = 0; rotNumsBy *= -1; }// reverse direction
         numbersView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
-            public void onAnimationEnd(Animator animator) { zoomNumbersIn(); }
+            public void onAnimationEnd(Animator animator) { choreoPhase = phase5; }
             public void onAnimationCancel(Animator animator) { }
             public void onAnimationRepeat(Animator animator) { }
         });
@@ -566,7 +621,7 @@ public class numerous extends Activity {
         rotateColorsBy *= -1; // alternate cw/ccw
         rainbowBG.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
-            public void onAnimationEnd(Animator animator) { rotateColors(); }
+            public void onAnimationEnd(Animator animator) { choreoPhase = phase6; }
             public void onAnimationCancel(Animator animator) { }
             public void onAnimationRepeat(Animator animator) { }
         });
@@ -607,7 +662,7 @@ public class numerous extends Activity {
 
         lowerMask.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
-            public void onAnimationEnd(Animator animator) { animateLowerMask(); }
+            public void onAnimationEnd(Animator animator) { choreoPhase = phase7; }
             public void onAnimationCancel(Animator animator) { }
             public void onAnimationRepeat(Animator animator) { }
         });
