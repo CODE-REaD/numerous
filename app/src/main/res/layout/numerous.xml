@@ -7,7 +7,8 @@
              android:fitsSystemWindows="true"
              tools:context=".numerous"
              android:clipToPadding="false"
-             android:clipChildren="false">
+             android:clipChildren="false"
+             android:alpha="0">
 
     <!-- Inner FrameLayout: experimental, to stabilize animation: -->
     <FrameLayout
@@ -16,7 +17,7 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:clipChildren="false"
-        android:background="@android:color/holo_purple">
+        android:background="@android:color/black">
 
         <ImageView
             android:id="@+id/rainbowBG"
@@ -44,4 +45,14 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"/>
 
+    <ImageView android:id="@+id/logoView"
+               android:contentDescription="code-read logo"
+               android:layout_width="fill_parent"
+               android:layout_height="fill_parent"
+               android:layout_gravity="center"
+               android:src="@drawable/code_read16b"
+               android:scaleType="fitCenter"
+               android:alpha="0"
+               android:adjustViewBounds="true"
+               android:background="#404040"/>
 </FrameLayout>
