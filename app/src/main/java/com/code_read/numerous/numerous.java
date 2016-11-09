@@ -411,6 +411,7 @@ public class numerous extends Activity {
         });
 
         animatedNumbers.start();
+        outerFrame.animate().alpha(1).setDuration(4000).withLayer();
 
         // Launch synthesized sound loop:
         if (!isRunning) {
@@ -526,7 +527,6 @@ public class numerous extends Activity {
         lowerMaskAnimating = false;
         colorsXScale = 2f;
         colorsYScale = 2f;
-        outerFrame.animate().alpha(1).setDuration(4000).withLayer();
 
         new Handler().postDelayed(new Runnable() {
             public void run() {
@@ -619,12 +619,14 @@ public class numerous extends Activity {
     //
     public void zoomNumbersIn(int duration) {
 //        numbersView.animate().cancel(); // try to reduce timing overlap artifacts
-        numbersView.animate().scaleX(12f).scaleY(12f).setDuration(duration * 1000).withLayer();
+        numbersView.animate().scaleX(12f).scaleY(12f).setDuration(duration * 1000).withLayer()
+                .setInterpolator(new AccelerateDecelerateInterpolator());
     }
 
     public void zoomNumbersOut(int duration) {
 //        numbersView.animate().cancel();
-        numbersView.animate().scaleX(1).scaleY(1).setDuration(duration * 1000).withLayer();
+        numbersView.animate().scaleX(1).scaleY(1).setDuration(duration * 1000).withLayer()
+                .setInterpolator(new AccelerateDecelerateInterpolator());
     }
 
     public void rotateNumbers(int duration) {
