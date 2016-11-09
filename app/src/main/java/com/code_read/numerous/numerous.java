@@ -525,7 +525,7 @@ public class numerous extends Activity {
         lowerMaskAnimating = false;
         colorsXScale = 11f;
         colorsYScale = 11f;
-        outerFrame.animate().alpha(1).setDuration(5000);
+        outerFrame.animate().alpha(1).setDuration(5000).withLayer();
 
         new Handler().postDelayed(new Runnable() {
             public void run() {
@@ -595,7 +595,8 @@ public class numerous extends Activity {
             public void run() {
                 runOnUiThread(new Runnable() {
                     public void run() {
-                        choreo();
+                        if (isRunning)
+                            choreo();
                     }
                 });
             }
@@ -606,55 +607,28 @@ public class numerous extends Activity {
         // Slowly reveal number coloration:
 //        shaderView.animate().alpha(0).setDuration(8000).setStartDelay(20000).withLayer();
         shaderView.animate().alpha(0).setDuration(duration * 1000).withLayer();
-        shaderView.animate().setListener(new Animator.AnimatorListener() {
-            public void onAnimationStart(Animator animator) { }
-            public void onAnimationEnd(Animator animator) {
-                choreoPhase = phase1;
-            }
-            public void onAnimationCancel(Animator animator) { }
-            public void onAnimationRepeat(Animator animator) { }
-        });
     }
 
     public void revealLowerMask(int duration) {
-        lowerMask.animate().alpha(1).setDuration(duration * 1000).withLayer()
-        .withEndAction(new Runnable() { public void run() { choreoPhase = phase2; }});
+        lowerMask.animate().alpha(1).setDuration(duration * 1000).withLayer();
     }
 
     //
     // The next three methods chain to one another for a repeating sequence:
     //
     public void zoomNumbersIn(int duration) {
-        numbersView.animate().scaleX(12f).scaleY(12f).setDuration(duration * 1000);
-        numbersView.animate().setListener(new Animator.AnimatorListener() {
-            public void onAnimationStart(Animator animator) { }
-            public void onAnimationEnd(Animator animator) { choreoPhase = phase3; }
-            public void onAnimationCancel(Animator animator) { }
-            public void onAnimationRepeat(Animator animator) { }
-        });
+        numbersView.animate().scaleX(12f).scaleY(12f).setDuration(duration * 1000).withLayer();
     }
 
     public void zoomNumbersOut(int duration) {
-        numbersView.animate().scaleX(1).scaleY(1).setDuration(duration * 1000);
-        numbersView.animate().setListener(new Animator.AnimatorListener() {
-            public void onAnimationStart(Animator animator) { }
-            public void onAnimationEnd(Animator animator) { choreoPhase = phase4; }
-            public void onAnimationCancel(Animator animator) { }
-            public void onAnimationRepeat(Animator animator) { }
-        });
+        numbersView.animate().scaleX(1).scaleY(1).setDuration(duration * 1000).withLayer();
     }
 
     public void rotateNumbers(int duration) {
-            numbersView.animate().rotationBy(rotNumsBy).setDuration(duration * 1000)
-                    .setInterpolator(new AccelerateDecelerateInterpolator())
-                    .withLayer();
+        numbersView.animate().rotationBy(rotNumsBy).setDuration(duration * 1000)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .withLayer();
         if (rotNumCt++ > 4) { rotNumCt = 0; rotNumsBy *= -1; }// reverse direction
-        numbersView.animate().setListener(new Animator.AnimatorListener() {
-            public void onAnimationStart(Animator animator) { }
-            public void onAnimationEnd(Animator animator) { choreoPhase = phase5; }
-            public void onAnimationCancel(Animator animator) { }
-            public void onAnimationRepeat(Animator animator) { }
-        });
     }
 
     // Continuously repeating, alternating rotation and zoom directions:
@@ -664,22 +638,17 @@ public class numerous extends Activity {
                     .scaleX(colorsXScale)
                     .scaleY(colorsYScale)
                     .setDuration(duration * 1000)
+                    .withLayer()
                     .setInterpolator(new AccelerateInterpolator());
         rotateColorsBy *= -1; // alternate cw/ccw
         colorsXScale = (colorsXScale == 11f) ? 4f : 11f; // alternating zoom
         colorsYScale = (colorsYScale == 11f) ? 4f : 11f;
-
-        rainbowBG.animate().setListener(new Animator.AnimatorListener() {
-            public void onAnimationStart(Animator animator) { }
-            public void onAnimationEnd(Animator animator) { choreoPhase = phase6; }
-            public void onAnimationCancel(Animator animator) { }
-            public void onAnimationRepeat(Animator animator) { }
-        });
     }
 
     public void animateLowerMask(boolean reentrant) {
         // Jank, even w/o audio or other animations, so we show this layer below nums.
-        if (!reentrant & lowerMaskAnimating) return;
+        if (!isRunning) return;
+        if (!reentrant & lowerMaskAnimating) return;  // we can reenter, otherwise ignore calls
         lowerMaskAnimating = true;
         if (frameRotated) return;
 //        int almXoffset = 0;
@@ -693,7 +662,7 @@ public class numerous extends Activity {
         double xDist    = aumX - umhX;
         double yDist    = aumY - umhY;
         double moveDist = Math.hypot(xDist, yDist);
-        long   moveDur  = Math.round(moveDist * 1000);
+        long   moveDur  = Math.round(moveDist * 1200); // slow down to avoid jank
 /*        Log.e("mDur", moveDur + " mDist " + moveDist
                 + "\nX: " + umhX + " to " + aumX
                 + "\nY: " + umhY + " to " + aumY
@@ -706,6 +675,7 @@ public class numerous extends Activity {
 //                .x(100 * aumX) // debug
 //                .y(100 * aumY) // debug
                 .setDuration(moveDur)
+                .withLayer()
                 .setInterpolator(new LinearInterpolator());  // This either was not the default on
                                                             // KK Samsung, or our other setInterpolator
                                                             // calls caused default to change.
@@ -1144,9 +1114,9 @@ public class numerous extends Activity {
 
 //        logoView.setVisibility(View.VISIBLE);
 
-        innerFrame.animate().alpha(0).setDuration(1000);
-        numbersView.animate().alpha(0).setDuration(1000);
-        logoView.animate().alpha(1).setDuration(2000);
+        innerFrame.animate().alpha(0).setDuration(1500);
+        numbersView.animate().alpha(0).setDuration(1500);
+        logoView.animate().alpha(1).setDuration(2500);
 
         exitMediaPlayer.setVolume(0.3f, 0.3f);
         exitMediaPlayer.start(); // exit sound effect
@@ -1179,3 +1149,4 @@ public class numerous extends Activity {
 //        System.exit(0);     // Avoid memory full if user presses back button then starts from task mgr.
     }
 }
+
