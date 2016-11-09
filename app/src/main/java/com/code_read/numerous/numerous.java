@@ -41,6 +41,7 @@ import android.os.Handler;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
@@ -119,7 +120,7 @@ public class numerous extends Activity {
             rotateNumbersActive, rotateColorsActive, animateLowerMaskActive, rotateFrameActive;
     boolean lowerMaskAnimating;
     float colorsXScale, colorsYScale;
-    MediaPlayer exitMediaPlayer;
+    MediaPlayer startupMediaPlayer, exitMediaPlayer;
 
     enum specialEffects {
         rotateEffect, rotateZoomEffect, slideEffect
@@ -145,6 +146,8 @@ public class numerous extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        startupMediaPlayer = MediaPlayer.create(this, R.raw.laser1);
+        startupMediaPlayer.start();
         this.requestWindowFeature(Window.FEATURE_NO_TITLE); //crw - no title under Kitkat
         setContentView(R.layout.numerous);
         outerFrame = findViewById(R.id.outerFrame);
@@ -153,7 +156,7 @@ public class numerous extends Activity {
         lowerMask    = (ImageView) findViewById(R.id.lowerMask);
         shaderView   = (ImageView) findViewById(R.id.shaderView);
         numbersView  = (ImageView) findViewById(R.id.numbersView);
-        logoView  = (ImageView) findViewById(R.id.logoView);
+        logoView     = (ImageView) findViewById(R.id.logoView);
 //        logoView.setVisibility(View.INVISIBLE);
 
 //        pictureFrame = findViewById(R.id.pictureFrame);
@@ -280,7 +283,7 @@ public class numerous extends Activity {
         animatedNumbers = new AnimationDrawable();
         for (int i = 0; i < 10; ++i) {
 //            animatedNumbers.addFrame(getDrawableNumstring(i, Color.BLACK), 50);
-            animatedNumbers.addFrame(getDrawableNumstring(i, Color.BLACK, 1), 75);
+            animatedNumbers.addFrame(getDrawableNumstring(i, Color.BLACK, 1), 70);
 //            animatedNumbers.addFrame(getDrawableNumstring(i, Color.BLACK), 100);
         }
 
@@ -294,7 +297,8 @@ public class numerous extends Activity {
         animatedNumbers.setOneShot(false);        // Run until we say stop
         animatedNumbers.start(); // NOTE: we can .stop() and .start() if needed
 
-        exitMediaPlayer = MediaPlayer.create(this, R.raw.steam5b);
+        startupMediaPlayer = MediaPlayer.create(this, R.raw.battle003);
+        exitMediaPlayer    = MediaPlayer.create(this, R.raw.steam5b);
 
     }
 
@@ -519,8 +523,8 @@ public class numerous extends Activity {
         choreoSeconds = 0;
         choreoPhase = start;
         lowerMaskAnimating = false;
-        colorsXScale = 9f;
-        colorsYScale = 9f;
+        colorsXScale = 11f;
+        colorsYScale = 11f;
         outerFrame.animate().alpha(1).setDuration(5000);
 
         new Handler().postDelayed(new Runnable() {
@@ -631,7 +635,7 @@ public class numerous extends Activity {
     }
 
     public void zoomNumbersOut(int duration) {
-        numbersView.animate().scaleX(.95f).scaleY(.95f).setDuration(duration * 1000);
+        numbersView.animate().scaleX(1).scaleY(1).setDuration(duration * 1000);
         numbersView.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
             public void onAnimationEnd(Animator animator) { choreoPhase = phase4; }
@@ -653,7 +657,7 @@ public class numerous extends Activity {
         });
     }
 
-    // Continuously repeating, alternating rotation and zoom:
+    // Continuously repeating, alternating rotation and zoom directions:
     public void rotateZoomColors(int duration) {
             rainbowBG.animate()
                     .rotationBy(rotateColorsBy)
@@ -662,8 +666,8 @@ public class numerous extends Activity {
                     .setDuration(duration * 1000)
                     .setInterpolator(new AccelerateInterpolator());
         rotateColorsBy *= -1; // alternate cw/ccw
-        colorsXScale = (colorsXScale == 9f) ? 4f : 9f; // alternating zoom
-        colorsYScale = (colorsYScale == 9f) ? 4f : 9f;
+        colorsXScale = (colorsXScale == 11f) ? 4f : 11f; // alternating zoom
+        colorsYScale = (colorsYScale == 11f) ? 4f : 11f;
 
         rainbowBG.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
@@ -689,7 +693,7 @@ public class numerous extends Activity {
         double xDist    = aumX - umhX;
         double yDist    = aumY - umhY;
         double moveDist = Math.hypot(xDist, yDist);
-        long   moveDur  = Math.round(moveDist * 500);
+        long   moveDur  = Math.round(moveDist * 1000);
 /*        Log.e("mDur", moveDur + " mDist " + moveDist
                 + "\nX: " + umhX + " to " + aumX
                 + "\nY: " + umhY + " to " + aumY
@@ -1119,6 +1123,7 @@ public class numerous extends Activity {
 
     @Override
     public void onPause() { // suspend until resume or exit
+        super.onPause();
         isRunning = false;
         numerouSounds.stop(spStream); // Stop any sound currently playing
         shaderView.animate().cancel();
@@ -1126,12 +1131,13 @@ public class numerous extends Activity {
         rainbowBG.animate().cancel();
         shaderView.animate().cancel();
         numbersView.animate().cancel();
-        super.onPause();
+        animatedNumbers.stop();
     }
 
-    //@Override
+    @Override
     public void onBackPressed() {
         backPressed   = true;
+        animatedNumbers.stop();
         numerouSounds.stop(spStream); // Stop any sound currently playing
 //        scheduleTaskExecutor.shutdown();
         isRunning = false;
@@ -1142,7 +1148,7 @@ public class numerous extends Activity {
         numbersView.animate().alpha(0).setDuration(1000);
         logoView.animate().alpha(1).setDuration(2000);
 
-        exitMediaPlayer.setVolume(0.4f, 0.4f);
+        exitMediaPlayer.setVolume(0.3f, 0.3f);
         exitMediaPlayer.start(); // exit sound effect
 
         outerFrame.animate().alpha(0).setDuration(3000).setStartDelay(3000);
@@ -1157,9 +1163,19 @@ public class numerous extends Activity {
 
     @Override
     protected void onDestroy() {
+        Log.w("onDestroy", "reached");
+        super.onDestroy();
         numerouSounds.stop(spStream); // Stop any sound currently playing
 //        scheduleTaskExecutor.shutdown();
         isRunning = false;
-        super.onDestroy();
+        exitMediaPlayer.stop();
+        exitMediaPlayer.reset();
+        exitMediaPlayer.release();
+        exitMediaPlayer = null;
+        startupMediaPlayer.stop();
+        startupMediaPlayer.reset();
+        startupMediaPlayer.release();
+        startupMediaPlayer = null;
+//        System.exit(0);     // Avoid memory full if user presses back button then starts from task mgr.
     }
 }
