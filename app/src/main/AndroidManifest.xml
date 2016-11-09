@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.code_read.numerous">
 
+    <!--Avoid restart when device is rotated landscape / portrait:-->
+    <!--android:configChanges="keyboardHidden|orientation|screenSize"-->
+
     <!--<uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />-->
     <!--android:hardwareAccelerated="true"-->
 
@@ -12,7 +15,10 @@
         android:theme="@style/Theme.TransparenC">
         <activity
             android:name=".numerous"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            android:hardwareAccelerated="true"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

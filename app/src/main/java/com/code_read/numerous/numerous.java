@@ -251,10 +251,10 @@ public class numerous extends Activity {
 
         gradientPaint.setShader(new LinearGradient(0, 0, 0, displayShortSide,
                 new int[] {
-                        Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF,
-                        Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF,
-                        Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF,
-                        Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF,
+//                        Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF,
+//                        Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF,
+//                        Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF,
+//                        Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF,
                         Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF,
                         Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE, 0xFFA100FF },
                 null,
@@ -282,9 +282,8 @@ public class numerous extends Activity {
 //        animatedNumbers = new MyAnimationDrawable();
         animatedNumbers = new AnimationDrawable();
         for (int i = 0; i < 10; ++i) {
-//            animatedNumbers.addFrame(getDrawableNumstring(i, Color.BLACK), 50);
-            animatedNumbers.addFrame(getDrawableNumstring(i, Color.BLACK, 1), 70);
-//            animatedNumbers.addFrame(getDrawableNumstring(i, Color.BLACK), 100);
+//            animatedNumbers.addFrame(getDrawableNumstring(i, Color.BLACK, 1), 70);
+            animatedNumbers.addFrame(getDrawableNumstring(i, Color.BLACK, 1), 80); // last parm. is duration
         }
 
 //        numbersView.setScaleX(1.9f); // kludge to avoid top/bottom margin problems on some Androids
@@ -297,7 +296,7 @@ public class numerous extends Activity {
         animatedNumbers.setOneShot(false);        // Run until we say stop
         animatedNumbers.start(); // NOTE: we can .stop() and .start() if needed
 
-        startupMediaPlayer = MediaPlayer.create(this, R.raw.battle003);
+//        startupMediaPlayer = MediaPlayer.create(this, R.raw.battle003);
         exitMediaPlayer    = MediaPlayer.create(this, R.raw.steam5b);
 
     }
@@ -411,6 +410,8 @@ public class numerous extends Activity {
             }
         });
 
+        animatedNumbers.start();
+
         // Launch synthesized sound loop:
         if (!isRunning) {
             isRunning = true;
@@ -492,8 +493,8 @@ public class numerous extends Activity {
             lowerMask.setScaleX(lmBaseScale);
             lowerMask.setScaleY(lmBaseScale);
             lmXtoLeft = (-(displayWidth * lmBaseScale) / 2) + (displayWidth / 2);
-            rainbowBG.setScaleX(4);
-            rainbowBG.setScaleY(4);
+            rainbowBG.setScaleX(2);
+            rainbowBG.setScaleY(2);
             innerFrame.setPivotX(displayWidth);  // Pivot at right edge of display
             innerFrame.setPivotY(displayHeight / 2);
         }
@@ -523,9 +524,9 @@ public class numerous extends Activity {
         choreoSeconds = 0;
         choreoPhase = start;
         lowerMaskAnimating = false;
-        colorsXScale = 11f;
-        colorsYScale = 11f;
-        outerFrame.animate().alpha(1).setDuration(5000).withLayer();
+        colorsXScale = 2f;
+        colorsYScale = 2f;
+        outerFrame.animate().alpha(1).setDuration(4000).withLayer();
 
         new Handler().postDelayed(new Runnable() {
             public void run() {
@@ -574,15 +575,15 @@ public class numerous extends Activity {
                 zoomNumbersIn(4);
                 rotateNumbers(4);
                 rotateZoomColors(4);
-                revealLowerMask(4);
+                revealLowerMask(8);
                 break;
-            case 30:
+            case 34:
                 zoomNumbersOut(4);
                 rotateNumbers(4);
                 rotateZoomColors(4);
                 animateLowerMask(false);
                 break;
-            case 35:
+            case 39:
                 choreoCounter = 0;  // repeat this sequence
 //                rotateFrame(4);
                 break;
@@ -617,14 +618,17 @@ public class numerous extends Activity {
     // The next three methods chain to one another for a repeating sequence:
     //
     public void zoomNumbersIn(int duration) {
+//        numbersView.animate().cancel(); // try to reduce timing overlap artifacts
         numbersView.animate().scaleX(12f).scaleY(12f).setDuration(duration * 1000).withLayer();
     }
 
     public void zoomNumbersOut(int duration) {
+//        numbersView.animate().cancel();
         numbersView.animate().scaleX(1).scaleY(1).setDuration(duration * 1000).withLayer();
     }
 
     public void rotateNumbers(int duration) {
+//        numbersView.animate().cancel();
         numbersView.animate().rotationBy(rotNumsBy).setDuration(duration * 1000)
                 .setInterpolator(new AccelerateDecelerateInterpolator())
                 .withLayer();
@@ -641,8 +645,8 @@ public class numerous extends Activity {
                     .withLayer()
                     .setInterpolator(new AccelerateInterpolator());
         rotateColorsBy *= -1; // alternate cw/ccw
-        colorsXScale = (colorsXScale == 11f) ? 4f : 11f; // alternating zoom
-        colorsYScale = (colorsYScale == 11f) ? 4f : 11f;
+        colorsXScale = (colorsXScale == 4f) ? 2f : 4f; // alternating zoom
+        colorsYScale = (colorsYScale == 4f) ? 2f : 4f;
     }
 
     public void animateLowerMask(boolean reentrant) {
@@ -662,7 +666,7 @@ public class numerous extends Activity {
         double xDist    = aumX - umhX;
         double yDist    = aumY - umhY;
         double moveDist = Math.hypot(xDist, yDist);
-        long   moveDur  = Math.round(moveDist * 1200); // slow down to avoid jank
+        long   moveDur  = Math.round(moveDist * 900); // slow down to avoid jank w/ lg screens
 /*        Log.e("mDur", moveDur + " mDist " + moveDist
                 + "\nX: " + umhX + " to " + aumX
                 + "\nY: " + umhY + " to " + aumY
@@ -676,7 +680,8 @@ public class numerous extends Activity {
 //                .y(100 * aumY) // debug
                 .setDuration(moveDur)
                 .withLayer()
-                .setInterpolator(new LinearInterpolator());  // This either was not the default on
+                .setInterpolator(new AccelerateDecelerateInterpolator());  // This either was not the default on
+//                .setInterpolator(new LinearInterpolator());  // This either was not the default on
                                                             // KK Samsung, or our other setInterpolator
                                                             // calls caused default to change.
 //                .withLayer();
@@ -1114,21 +1119,21 @@ public class numerous extends Activity {
 
 //        logoView.setVisibility(View.VISIBLE);
 
-        innerFrame.animate().alpha(0).setDuration(1500);
-        numbersView.animate().alpha(0).setDuration(1500);
-        logoView.animate().alpha(1).setDuration(2500);
+        innerFrame.animate().alpha(0).setDuration(2000);
+        numbersView.animate().alpha(0).setDuration(2000);
+        logoView.animate().alpha(1).setDuration(2800);
 
         exitMediaPlayer.setVolume(0.3f, 0.3f);
         exitMediaPlayer.start(); // exit sound effect
 
-        outerFrame.animate().alpha(0).setDuration(3000).setStartDelay(3000);
+        outerFrame.animate().alpha(0).setDuration(3000).setStartDelay(4000);
 
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 finish();
             }
-        }, 6000);
+        }, 7000);
     }
 
     @Override
