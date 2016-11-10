@@ -221,8 +221,8 @@ public class numerous extends Activity {
         lmParams.width  = displayShortSide * 2;
         lowerMask.setLayoutParams(lmParams);
 
-//        outerFrame.setBackgroundColor(Color.BLACK);
-        outerFrame.setBackgroundColor(Color.GRAY);
+        outerFrame.setBackgroundColor(Color.BLACK);
+//        outerFrame.setBackgroundColor(Color.GRAY);
 
 //        innerFrame.setPivotX(displayWidth * .8f);
 //        innerFrame.setPivotY(displayHeight / 2);
@@ -281,9 +281,13 @@ public class numerous extends Activity {
         // Create the AnimationDrawable in which we will store all frames of the animation
 //        animatedNumbers = new MyAnimationDrawable();
         animatedNumbers = new AnimationDrawable();
+        int myDuration;
         for (int i = 0; i < 10; ++i) {
 //            animatedNumbers.addFrame(getDrawableNumstring(i, Color.BLACK, 1), 70);
-            animatedNumbers.addFrame(getDrawableNumstring(i, Color.BLACK, 1), 80); // last parm. is duration
+//            myDuration = myRandom.nextInt(100) - 40; // 60..100 (but defective b/c same #s always slow
+
+            // last parm. is duration, significant impact on performance:
+            animatedNumbers.addFrame(getDrawableNumstring(i, Color.BLACK, 1), 90);
         }
 
 //        numbersView.setScaleX(1.9f); // kludge to avoid top/bottom margin problems on some Androids
@@ -550,17 +554,27 @@ public class numerous extends Activity {
 //        Log.w("choreo seconds", "" + choreoSeconds);
         switch (choreoSeconds) {
             case 0:
-                rotateZoomColors(6);
-                revealColoration(6);
+                innerFrameFlipOver(6);
                 break;
             case 7:
+                revealColoration(3);
                 rotateZoomColors(3);
                 zoomNumbersIn(3);
                 break;
             case 11:
                 rotateZoomColors(3);
                 zoomNumbersOut(3);
+                revealLowerMask(3);
                 break;
+            case 15:
+                innerFrameFlipBack(6);
+                break;
+            case 22:
+                choreoCounter = 0;
+                break;
+
+
+/*
             case 15:
                 rotateZoomColors(4);
                 zoomNumbersIn(4);
@@ -584,9 +598,11 @@ public class numerous extends Activity {
                 animateLowerMask(false);
                 break;
             case 39:
-                choreoCounter = 0;  // repeat this sequence
-//                rotateFrame(4);
+                innerFrameFlipOver(4);
                 break;
+            case 60:
+                choreoCounter = 0;  // repeat this sequence
+                break;*/
         }
 
         choreoPhase = noChange; // Do nothing until another method sets choreoPhase
@@ -604,14 +620,45 @@ public class numerous extends Activity {
         }, 500);
     }
 
+    public void innerFrameFlipOver(int duration) {
+        zoomNumbersOut(1);
+//        innerFrame.setCameraDistance(4000f);
+        innerFrame.animate()
+                .withLayer()
+                .rotationY(180)
+        .setDuration(duration * 1000);
+    }
+
+    public void innerFrameFlipBack(int duration) {
+        zoomNumbersOut(1);
+//        innerFrame.setCameraDistance(4000f);
+        innerFrame.animate()
+                .withLayer()
+                .rotationY(0)
+        .setDuration(duration * 1000);
+    }
+
+    public void zoomInnerFrameOut(int duration) {
+        innerFrame.animate()
+        .scaleX(.1f)
+        .scaleY(.1f)
+//                .setInterpolator(new CycleInterpolator(3))
+//                .withLayer()
+        .setDuration(duration * 1000);
+    }
+
     public void revealColoration(int duration) {
         // Slowly reveal number coloration:
 //        shaderView.animate().alpha(0).setDuration(8000).setStartDelay(20000).withLayer();
-        shaderView.animate().alpha(0).setDuration(duration * 1000).withLayer();
+        shaderView.animate().alpha(0)
+//                .withLayer()
+        .setDuration(duration * 1000);
     }
 
     public void revealLowerMask(int duration) {
-        lowerMask.animate().alpha(1).setDuration(duration * 1000).withLayer();
+        lowerMask.animate().alpha(1)
+//                .withLayer()
+        .setDuration(duration * 1000);
     }
 
     //
@@ -619,21 +666,26 @@ public class numerous extends Activity {
     //
     public void zoomNumbersIn(int duration) {
 //        numbersView.animate().cancel(); // try to reduce timing overlap artifacts
-        numbersView.animate().scaleX(12f).scaleY(12f).setDuration(duration * 1000).withLayer()
-                .setInterpolator(new AccelerateDecelerateInterpolator());
+        numbersView.animate().scaleX(14f).scaleY(14f).setDuration(duration * 1000)
+//                .withLayer()
+//                .setInterpolator(new AccelerateDecelerateInterpolator());
+                .setInterpolator(new LinearInterpolator());
     }
 
     public void zoomNumbersOut(int duration) {
 //        numbersView.animate().cancel();
-        numbersView.animate().scaleX(1).scaleY(1).setDuration(duration * 1000).withLayer()
-                .setInterpolator(new AccelerateDecelerateInterpolator());
+        numbersView.animate().scaleX(1.1f).scaleY(1.1f).setDuration(duration * 1000)
+//                .withLayer()
+//                .setInterpolator(new AccelerateDecelerateInterpolator());
+                .setInterpolator(new LinearInterpolator());
     }
 
     public void rotateNumbers(int duration) {
 //        numbersView.animate().cancel();
         numbersView.animate().rotationBy(rotNumsBy).setDuration(duration * 1000)
-                .setInterpolator(new AccelerateDecelerateInterpolator())
-                .withLayer();
+//                .setInterpolator(new AccelerateDecelerateInterpolator())
+//                .withLayer();
+        .setInterpolator(new LinearInterpolator());
         if (rotNumCt++ > 4) { rotNumCt = 0; rotNumsBy *= -1; }// reverse direction
     }
 
@@ -644,7 +696,7 @@ public class numerous extends Activity {
                     .scaleX(colorsXScale)
                     .scaleY(colorsYScale)
                     .setDuration(duration * 1000)
-                    .withLayer()
+//                    .withLayer()
                     .setInterpolator(new AccelerateInterpolator());
         rotateColorsBy *= -1; // alternate cw/ccw
         colorsXScale = (colorsXScale == 4f) ? 2f : 4f; // alternating zoom
@@ -681,12 +733,11 @@ public class numerous extends Activity {
 //                .x(100 * aumX) // debug
 //                .y(100 * aumY) // debug
                 .setDuration(moveDur)
-                .withLayer()
+//                .withLayer()
                 .setInterpolator(new AccelerateDecelerateInterpolator());  // This either was not the default on
 //                .setInterpolator(new LinearInterpolator());  // This either was not the default on
                                                             // KK Samsung, or our other setInterpolator
                                                             // calls caused default to change.
-//                .withLayer();
 
         lowerMask.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
