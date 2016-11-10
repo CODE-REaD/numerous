@@ -568,6 +568,7 @@ public class numerous extends Activity {
                 animateLowerMask(false);
                 break;
             case 15:
+                zoomNumbersIn(6);
                 rotateNumbers(6);
                 innerFrameFlipBack(6);
                 break;
@@ -623,7 +624,7 @@ public class numerous extends Activity {
     }
 
     public void innerFrameFlipOver(int duration) {
-        zoomNumbersOut(1);
+//        zoomNumbersOut(1);
         innerFrame.setCameraDistance(4000f);
         innerFrame.animate()
                 .withLayer()
@@ -632,7 +633,7 @@ public class numerous extends Activity {
     }
 
     public void innerFrameFlipBack(int duration) {
-        zoomNumbersOut(1);
+//        zoomNumbersOut(1);
         innerFrame.setCameraDistance(4000f);
         innerFrame.animate()
                 .withLayer()

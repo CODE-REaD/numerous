@@ -34,12 +34,13 @@
             android:alpha="0"
             android:layout_gravity="center"/>
 
-    </FrameLayout>
     <ImageView
         android:id="@+id/numbersView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"/>
+
+    </FrameLayout>
 
     <ImageView android:id="@+id/logoView"
                android:contentDescription="code-read logo"
