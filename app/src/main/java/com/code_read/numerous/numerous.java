@@ -500,8 +500,8 @@ public class numerous extends Activity {
             lmXtoLeft = (-(displayWidth * lmBaseScale) / 2) + (displayWidth / 2);
             rainbowBG.setScaleX(2);
             rainbowBG.setScaleY(2);
-            innerFrame.setPivotX(displayWidth);  // Pivot at right edge of display
-            innerFrame.setPivotY(displayHeight / 2);
+//            innerFrame.setPivotX(displayWidth);  // Pivot at right edge of display
+//            innerFrame.setPivotY(displayHeight / 2);
         }
 
 /*
