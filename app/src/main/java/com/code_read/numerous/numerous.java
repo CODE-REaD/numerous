@@ -97,9 +97,9 @@ public class numerous extends Activity {
     AnimationDrawable animatedNumbers;
     final int numZoomCount = 0;
     float aumX, aumY, umhX, umhY;
-    final int lmBaseScale = 9; // base scale for lower mask
-//    final int lmBaseScale = 4; // base scale for lower mask
-    final int aumZoomTo = lmBaseScale;
+    final int bnmBaseScale = 9; // base scale for lower mask
+//    final int bnmBaseScale = 4; // base scale for lower mask
+    final int aumZoomTo = bnmBaseScale;
     int rotNumsBy, rotNumCt;
     int rotateColorsBy;
 //    int rotateFrameBy = 180;
@@ -154,7 +154,7 @@ public class numerous extends Activity {
         innerFrame   = findViewById(R.id.innerFrame);
         rainbowBG    = (ImageView) findViewById(R.id.rainbowBG);
         bigNumbersMask = (ImageView) findViewById(R.id.bigNumbersMask);
-        shaderView   = (ImageView) findViewById(R.id.shaderView);
+//        shaderView   = (ImageView) findViewById(R.id.shaderView);
         numbersView  = (ImageView) findViewById(R.id.numbersView);
         logoView     = (ImageView) findViewById(R.id.logoView);
 //        logoView.setVisibility(View.INVISIBLE);
@@ -163,7 +163,7 @@ public class numerous extends Activity {
 
         //        tileFrame.setLayerType(View.LAYER_TYPE_HARDWARE, null); // no change
 
-        shaderView.setBackgroundColor(Color.WHITE);
+//        shaderView.setBackgroundColor(Color.WHITE);
 
         // The most "numeric" of fonts: the kind computers like to read :-)
         VGAFixFont = Typeface.createFromAsset(getAssets(), "fonts/OCRAEXT.TTF");
@@ -227,20 +227,20 @@ public class numerous extends Activity {
 //        innerFrame.setPivotX(displayWidth * .8f);
 //        innerFrame.setPivotY(displayHeight / 2);
 
-//        bigNumbersMask.setMaxHeight(displayHeight * lmBaseScale);
-//        bigNumbersMask.setMaxWidth( displayWidth  * lmBaseScale);
+//        bigNumbersMask.setMaxHeight(displayHeight * bnmBaseScale);
+//        bigNumbersMask.setMaxWidth( displayWidth  * bnmBaseScale);
 
         // bigNumbersMask is large numbers through which the lower layers may be viewed
         bigNumbersMask.setBackground(getDrawableNumstring(0, Color.WHITE, 1));
 
 //        bigNumbersMask.setTranslationX(0);
 //        bigNumbersMask.setTranslationY(0);
-//        bigNumbersMask.setX(-(displayWidth * lmBaseScale) + displayWidth); // all the way to "left" as test
-//        bigNumbersMask.setX(displayWidth * lmBaseScale); // all the way to "left" as test
-//        bigNumbersMask.setX(-(displayWidth * lmBaseScale) / 2); // sets right edge to screen center
+//        bigNumbersMask.setX(-(displayWidth * bnmBaseScale) + displayWidth); // all the way to "left" as test
+//        bigNumbersMask.setX(displayWidth * bnmBaseScale); // all the way to "left" as test
+//        bigNumbersMask.setX(-(displayWidth * bnmBaseScale) / 2); // sets right edge to screen center
 
         // Prepare for innerFrame rotation:
-//        bigNumbersMask.setX((-(displayWidth * lmBaseScale) / 2) + (displayWidth / 2)); // sets right edge to screen right edge
+//        bigNumbersMask.setX((-(displayWidth * bnmBaseScale) / 2) + (displayWidth / 2)); // sets right edge to screen right edge
 
 //        Bitmap gradientBitmap = Bitmap.createBitmap(displayWidth, displayHeight, Bitmap.Config.RGB_565);
 //        Bitmap gradientBitmap = Bitmap.createBitmap(displayWidth / 4, displayHeight / 4, Bitmap.Config.RGB_565);
@@ -484,8 +484,8 @@ public class numerous extends Activity {
 
 
         if (birdsEye) { // Shrink the views to provide elevated overview
-            bigNumbersMask.setScaleX(lmBaseScale * .01f);
-            bigNumbersMask.setScaleY(lmBaseScale * .01f);
+            bigNumbersMask.setScaleX(bnmBaseScale * .01f);
+            bigNumbersMask.setScaleY(bnmBaseScale * .01f);
             rainbowBG.setScaleX(1);
             rainbowBG.setScaleY(1);
             numbersView.setScaleX(.7f);
@@ -495,9 +495,9 @@ public class numerous extends Activity {
         } else {
             pivotFrameBy =   displayWidth / 2;
             slideFrameBy = -(displayWidth / 2);
-            bigNumbersMask.setScaleX(lmBaseScale);
-            bigNumbersMask.setScaleY(lmBaseScale);
-            lmXtoLeft = (-(displayWidth * lmBaseScale) / 2) + (displayWidth / 2);
+            bigNumbersMask.setScaleX(bnmBaseScale);
+            bigNumbersMask.setScaleY(bnmBaseScale);
+            lmXtoLeft = (-(displayWidth * bnmBaseScale) / 2) + (displayWidth / 2);
             rainbowBG.setScaleX(2);
             rainbowBG.setScaleY(2);
 //            innerFrame.setPivotX(displayWidth);  // Pivot at right edge of display
@@ -520,7 +520,7 @@ public class numerous extends Activity {
 
         // We launch this in advance of other View animations.  Its long StartDelay
         // ..gives the appearance of coordination with other animations:
-//        revealColoration();
+//        revealRainbow();
 //        zoomNumbersIn();
         revealColorationActive = revealbigNumbersMaskActive = zoomNumbersInActive = zoomNumbersOutActive =
                 rotateNumbersActive = rotateColorsActive = animatebigNumbersMaskActive = rotateFrameActive
@@ -557,7 +557,7 @@ public class numerous extends Activity {
                 innerFrameFlipOver(6);
                 break;
             case 7:
-                revealColoration(3);
+                revealRainbow(3);
                 rotateZoomColors(3);
                 zoomNumbersIn(3);
                 break;
@@ -650,11 +650,10 @@ public class numerous extends Activity {
         .setDuration(duration * 1000);
     }
 
-    public void revealColoration(int duration) {
+    public void revealRainbow(int duration) {
         // Slowly reveal number coloration:
-//        shaderView.animate().alpha(0).setDuration(8000).setStartDelay(20000).withLayer();
-        shaderView.animate().alpha(0)
-//                .withLayer()
+//        shaderView.animate().alpha(0).withLayer()
+                rainbowBG.animate().alpha(1).withLayer()
         .setDuration(duration * 1000);
     }
 
@@ -717,8 +716,9 @@ public class numerous extends Activity {
         umhY = aumY;
 
         // Where to slide to: random coordinates between -5 and +5 times displayShortSide:
-        aumX = myRandom.nextInt(10) - 5;
-        aumY = myRandom.nextInt(10) - 5;
+        // todo: avoid "moving" too close to same location as last (reiterate random if match?)
+        aumX = myRandom.nextInt(16) - 8;
+        aumY = myRandom.nextInt(16) - 8;
         // Calculate distance in order to maintain uniform velocity:
         double xDist    = aumX - umhX;
         double yDist    = aumY - umhY;
@@ -767,7 +767,7 @@ public class numerous extends Activity {
 //        innerFrame.animate().rotationYBy(rotateFrameBy).xBy(slideFrameBy)
 //                .setDuration(20000).setListener(new Animator.AnimatorListener() {
 
-//        bigNumbersMask.setX((-(displayWidth * lmBaseScale) / 2) + (displayWidth / 2));
+//        bigNumbersMask.setX((-(displayWidth * bnmBaseScale) / 2) + (displayWidth / 2));
 
 
 //        bigNumbersMask.animate().x(lmXtoLeft).setDuration(3000).start();
@@ -781,7 +781,7 @@ public class numerous extends Activity {
 
         frameRotated = true;          // Limit bigNumbersMask animations
         bigNumbersMask.animate().cancel(); // Move to left so it doesn't disappear on innerFrame rotateY
-        aumX = -lmBaseScale + 1;      // aumX is used to calc. Durations
+        aumX = -bnmBaseScale + 1;      // aumX is used to calc. Durations
         long lmDuration = (long) Math.abs(aumX - umhX) * 500;
         bigNumbersMask.animate()
                 .x(aumX * displayShortSide)
@@ -888,7 +888,7 @@ public class numerous extends Activity {
         int moveDist = (int) Math.hypot(xDist, yDist);
 //        int moveDur = moveDist * 2000;
         int moveDur = moveDist * 1500;
-        bigNumbersMask.animate().scaleX(lmBaseScale).scaleY(lmBaseScale).x(displayShortSide * umhX)
+        bigNumbersMask.animate().scaleX(bnmBaseScale).scaleY(bnmBaseScale).x(displayShortSide * umhX)
                 .y(displayShortSide * umhY).setDuration(moveDur).withLayer();
             bigNumbersMask.animate().setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) { }
@@ -1157,10 +1157,10 @@ public class numerous extends Activity {
         super.onPause();
         isRunning = false;
         numerouSounds.stop(spStream); // Stop any sound currently playing
-        shaderView.animate().cancel();
+//        shaderView.animate().cancel();
         bigNumbersMask.animate().cancel();
         rainbowBG.animate().cancel();
-        shaderView.animate().cancel();
+//        shaderView.animate().cancel();
         numbersView.animate().cancel();
         animatedNumbers.stop();
     }
@@ -1173,7 +1173,7 @@ public class numerous extends Activity {
 //        scheduleTaskExecutor.shutdown();
         isRunning = false;
 
-//        logoView.setVisibility(View.VISIBLE);
+        logoView.setVisibility(View.VISIBLE);
 
         innerFrame.animate().alpha(0).setDuration(2000);
         numbersView.animate().alpha(0).setDuration(2000);

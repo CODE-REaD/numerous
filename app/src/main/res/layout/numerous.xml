@@ -8,24 +8,27 @@
              tools:context=".numerous"
              android:alpha="0">
 
-    <!-- Inner FrameLayout: experimental, to stabilize animation: -->
+    <!-- Inner FrameLayout, to 3d rotate with black outerFrame backdrop: -->
     <FrameLayout
         android:id="@+id/innerFrame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/black">
+        android:background="@android:color/white">
 
         <ImageView
             android:id="@+id/rainbowBG"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:adjustViewBounds="false"
+            android:alpha="0"
             android:layout_gravity="center"/>
 
+<!--
         <ImageView
             android:id="@+id/shaderView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+-->
 
         <ImageView
             android:id="@+id/bigNumbersMask"
@@ -50,6 +53,7 @@
                android:src="@drawable/code_read16b"
                android:scaleType="fitCenter"
                android:alpha="0"
+               android:visibility="gone"
                android:adjustViewBounds="true"
                android:background="#404040"/>
 </FrameLayout>
