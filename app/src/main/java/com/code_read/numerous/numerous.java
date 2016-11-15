@@ -121,6 +121,13 @@ public class numerous extends Activity {
     boolean bigNumbersMaskAnimating;
     float colorsXScale, colorsYScale;
     MediaPlayer startupMediaPlayer, exitMediaPlayer;
+    boolean zoomNums, zoomNumsIn, numsZooming;
+    boolean rotateNums, numsRotating;
+    float numViewAlpha;
+    boolean innerFrameFlipped;
+    float numViewAlphaBase;
+    boolean innerFlipping;
+    boolean choreoIntro;
 
     enum specialEffects {
         rotateEffect, rotateZoomEffect, slideEffect
@@ -459,7 +466,6 @@ public class numerous extends Activity {
                     audioTrack3.play();
                     while (isRunning) {
                         freq = lRandom.nextInt(2048) + 512; // next frequency
-//                        ampl = (int) (680 * Math.sin(ph / 4096)) + 1000;  // next sine based amplitude
                         ampl = (int) (1000 * Math.sin(ph / 4096)) + 680;  // next sine based amplitude
                         double increment = (twopi * freq) / soundRes;   // how much to increase ph by
                         for (int i = 0; i < buffsize; i++) {
@@ -500,37 +506,28 @@ public class numerous extends Activity {
             lmXtoLeft = (-(displayWidth * bnmBaseScale) / 2) + (displayWidth / 2);
             rainbowBG.setScaleX(2);
             rainbowBG.setScaleY(2);
-//            innerFrame.setPivotX(displayWidth);  // Pivot at right edge of display
-//            innerFrame.setPivotY(displayHeight / 2);
         }
-
-/*
-        new Handler().postDelayed(new Runnable() {
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        zoomNumbersIn();
-                    }
-                });
-            }
-        }, 4000);
-*/
 
 //        bigNumbersMask.setAlpha(0);  For some reason, have to set this in Layout rather than here
 
-        // We launch this in advance of other View animations.  Its long StartDelay
-        // ..gives the appearance of coordination with other animations:
-//        revealRainbow();
-//        zoomNumbersIn();
         revealColorationActive = revealbigNumbersMaskActive = zoomNumbersInActive = zoomNumbersOutActive =
                 rotateNumbersActive = rotateColorsActive = animatebigNumbersMaskActive = rotateFrameActive
                         = false;
+
         choreoCounter = 0;
         choreoSeconds = 0;
-        choreoPhase = start;
+        choreoIntro = true;
         bigNumbersMaskAnimating = false;
+        innerFrameFlipped = false;
         colorsXScale = 2f;
         colorsYScale = 2f;
+        zoomNumsIn = true;  // start by zooming numbers in
+        rotNumsBy = 0; // start w/o rotation
+        numViewAlphaBase = numViewAlpha = 1;  // start w/o alpha
+//        innerFrame.setCameraDistance(4000f);
+//        float scale = getResources().getDisplayMetrics().density;
+//        innerFrame.setCameraDistance(4 * scale);
+        innerFrame.setCameraDistance(displayLongSide * 2);
 
         new Handler().postDelayed(new Runnable() {
             public void run() {
@@ -548,67 +545,44 @@ public class numerous extends Activity {
     // ..is via callbacks.  So we exploit callbacks to create a continous sequence by having
     // ..the following methods call one another from *.onAnimationEnd() or *.withEndAction():
 
+
+    // start simple, one anim at a time.  then add more
     public void choreo() {
         // Call routines based on time here:
         choreoSeconds = choreoCounter++ / 2;
 //        Log.w("choreo seconds", "" + choreoSeconds);
-        switch (choreoSeconds) {
-            case 0:
-                innerFrameFlipOver(6);
-                break;
-            case 7:
-                revealRainbow(3);
-                rotateZoomColors(3);
-                zoomNumbersIn(3);
-                break;
-            case 11:
-                rotateZoomColors(3);
-                zoomNumbersOut(3);
-                revealbigNumbersMask(3);
-                animatebigNumbersMask(false);
-                break;
-            case 15:
-                zoomNumbersIn(6);
-                rotateNumbers(6);
-                innerFrameFlipBack(6);
-                break;
-            case 22:
-                choreoCounter = 0;
-                break;
+        if (choreoIntro)
+            switch (choreoSeconds) {
+                case 5:
+                    zoomNums = true;
+                    zoomNumsInOut(3);    // start number zoom cycle
+                    break;
+                case 10:
+                    revealRainbow(3);
+                    rotateZoomColors(3);
+                    break;
+                case 20:
+                    revealbigNumbersMask(3);
+                    animatebigNumbersMask(false);
+                    break;
+                case 27:
+                    rotNumsBy = 288; // start numbers rotating
+                    break;
+                case 34:
+                    numViewAlphaBase = 0.2f;
+                    flipInnerFrame(10);
+                    break;
+                case 45:    // Intro is over, now just run things randomly from now on
+                    choreoIntro = false;
+                    break;
+            }
 
-
-/*
-            case 15:
-                rotateZoomColors(4);
-                zoomNumbersIn(4);
-                rotateNumbers(4);
-                break;
-            case 20:
-                zoomNumbersOut(4);
-                rotateNumbers(4);
-                rotateZoomColors(4);
-                break;
-            case 25:
-                zoomNumbersIn(4);
-                rotateNumbers(4);
-                rotateZoomColors(4);
-                revealbigNumbersMask(8);
-                break;
-            case 34:
-                zoomNumbersOut(4);
-                rotateNumbers(4);
-                rotateZoomColors(4);
-                animatebigNumbersMask(false);
-                break;
-            case 39:
-                innerFrameFlipOver(4);
-                break;
-            case 60:
-                choreoCounter = 0;  // repeat this sequence
-                break;*/
+        if (!choreoIntro && (choreoSeconds % 6 == 0)) {
+            zoomNums  = myRandom.nextBoolean();
+            if (zoomNums) zoomNumsInOut(3);
+            rotNumsBy = myRandom.nextInt(360);
+            if (myRandom.nextBoolean()) flipInnerFrame(myRandom.nextInt(10) + 5);
         }
-
-        choreoPhase = noChange; // Do nothing until another method sets choreoPhase
 
         // Listen for change in choreoPhase every 500 ms (2x / second):
         new Handler().postDelayed(new Runnable() {
@@ -623,49 +597,80 @@ public class numerous extends Activity {
         }, 500);
     }
 
-    public void innerFrameFlipOver(int duration) {
-//        zoomNumbersOut(1);
-        innerFrame.setCameraDistance(4000f);
-        innerFrame.animate()
-                .withLayer()
-                .rotationY(180)
-        .setDuration(duration * 1000);
-    }
+    public void flipInnerFrame(int duration) {
+        if (innerFlipping) return;
+        innerFlipping = true;
+        int xRot, yRot;
+        xRot = (myRandom.nextBoolean()) ? 0 : 360;
+        yRot = (myRandom.nextBoolean()) ? 0 : 360;
+        if (xRot == 0) yRot = 360;  // ensure at least one rotates, favor y
 
-    public void innerFrameFlipBack(int duration) {
-//        zoomNumbersOut(1);
-        innerFrame.setCameraDistance(4000f);
-        innerFrame.animate()
-                .withLayer()
-                .rotationY(0)
-        .setDuration(duration * 1000);
-    }
-
-    public void zoomInnerFrameOut(int duration) {
-        innerFrame.animate()
-        .scaleX(.1f)
-        .scaleY(.1f)
-//                .setInterpolator(new CycleInterpolator(3))
-//                .withLayer()
-        .setDuration(duration * 1000);
+            innerFrame.animate()
+                    .withLayer()
+                    .rotationY(yRot)
+                    .rotationX(xRot)
+                    .setDuration(duration * 1000)
+                    .withEndAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            innerFlipping = false;
+                        }
+                    });
     }
 
     public void revealRainbow(int duration) {
         // Slowly reveal number coloration:
-//        shaderView.animate().alpha(0).withLayer()
-                rainbowBG.animate().alpha(1).withLayer()
-        .setDuration(duration * 1000);
+        rainbowBG.animate().alpha(1).withLayer()
+                .setDuration(duration * 1000);
     }
 
     public void revealbigNumbersMask(int duration) {
         bigNumbersMask.animate().alpha(1)
-//                .withLayer()
+                .withLayer()
         .setDuration(duration * 1000);
     }
 
-    //
-    // The next three methods chain to one another for a repeating sequence:
-    //
+    public void zoomNumsInOut(final int duration) {
+//        if (!zoomNums || numsZooming) return;
+        if (numsZooming) return;
+        if (zoomNums && zoomNumsIn) {        // direction flag
+            numsZooming = true;     // status flag
+            numbersView.animate().scaleX(20f).scaleY(20f).setDuration(duration * 1000)
+                    .alpha(numViewAlpha)
+                    .setStartDelay(2000)
+                    .rotationBy(rotNumsBy)
+                    .withLayer()
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .withEndAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            numsZooming = false;
+                            zoomNumsInOut(duration);
+                        }
+                    });
+        } else if (zoomNums) {
+            numsZooming = true;     // status flag
+            numbersView.animate().scaleX(1.1f).scaleY(1.1f).setDuration(duration * 1000)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .alpha(numViewAlpha)
+                    .setStartDelay(200)
+                    .rotationBy(rotNumsBy)
+                    .withLayer()
+                    .withEndAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            numsZooming = false;
+                            zoomNumsInOut(duration);
+                        }
+                    });
+        }
+        zoomNumsIn = !zoomNumsIn; // alternate directions
+        if (rotNumCt++ > 4) { rotNumCt = 0; rotNumsBy *= -1; }// reverse direction
+        numViewAlpha = myRandom.nextFloat() + numViewAlphaBase;
+        numViewAlpha = (numViewAlpha > 1) ? 1 : numViewAlpha;
+    }
+
+
     public void zoomNumbersIn(int duration) {
 //        numbersView.animate().cancel(); // try to reduce timing overlap artifacts
         numbersView.animate().scaleX(14f).scaleY(14f).setDuration(duration * 1000)
@@ -676,30 +681,40 @@ public class numerous extends Activity {
 
     public void zoomNumbersOut(int duration) {
 //        numbersView.animate().cancel();
-        numbersView.animate().scaleX(1.1f).scaleY(1.1f).setDuration(duration * 1000)
-//                .withLayer()
-//                .setInterpolator(new AccelerateDecelerateInterpolator());
-                .setInterpolator(new LinearInterpolator());
     }
 
-    public void rotateNumbers(int duration) {
-//        numbersView.animate().cancel();
+    public void rotateNumbers(final int duration) {
+        if (!rotateNums || numsRotating) return;
+        numsRotating = true;
+        numsZooming = true;     // status flag
         numbersView.animate().rotationBy(rotNumsBy).setDuration(duration * 1000)
-//                .setInterpolator(new AccelerateDecelerateInterpolator())
-//                .withLayer();
-        .setInterpolator(new LinearInterpolator());
+        .setInterpolator(new LinearInterpolator())
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        numsRotating = false;
+                        rotateNumbers(duration);
+                    }
+                });
+        ;
         if (rotNumCt++ > 4) { rotNumCt = 0; rotNumsBy *= -1; }// reverse direction
     }
 
     // Continuously repeating, alternating rotation and zoom directions:
-    public void rotateZoomColors(int duration) {
+    public void rotateZoomColors(final int duration) {
             rainbowBG.animate()
                     .rotationBy(rotateColorsBy)
                     .scaleX(colorsXScale)
                     .scaleY(colorsYScale)
                     .setDuration(duration * 1000)
-//                    .withLayer()
-                    .setInterpolator(new AccelerateInterpolator());
+                    .withLayer()
+                    .setInterpolator(new AccelerateInterpolator())
+                    .withEndAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            rotateZoomColors(duration);
+                        }
+                    });;
         rotateColorsBy *= -1; // alternate cw/ccw
         colorsXScale = (colorsXScale == 4f) ? 2f : 4f; // alternating zoom
         colorsYScale = (colorsYScale == 4f) ? 2f : 4f;
@@ -1156,12 +1171,11 @@ public class numerous extends Activity {
     public void onPause() { // suspend until resume or exit
         super.onPause();
         isRunning = false;
-        numerouSounds.stop(spStream); // Stop any sound currently playing
-//        shaderView.animate().cancel();
+        numerouSounds.stop(spStream); // Stop any sound effect currently playing
         bigNumbersMask.animate().cancel();
         rainbowBG.animate().cancel();
-//        shaderView.animate().cancel();
         numbersView.animate().cancel();
+        innerFrame.animate().cancel();
         animatedNumbers.stop();
     }
 
@@ -1169,8 +1183,7 @@ public class numerous extends Activity {
     public void onBackPressed() {
         backPressed   = true;
         animatedNumbers.stop();
-        numerouSounds.stop(spStream); // Stop any sound currently playing
-//        scheduleTaskExecutor.shutdown();
+        numerouSounds.stop(spStream); // Stop any sound effect currently playing
         isRunning = false;
 
         logoView.setVisibility(View.VISIBLE);
@@ -1197,7 +1210,6 @@ public class numerous extends Activity {
         Log.w("onDestroy", "reached");
         super.onDestroy();
         numerouSounds.stop(spStream); // Stop any sound currently playing
-//        scheduleTaskExecutor.shutdown();
         isRunning = false;
         exitMediaPlayer.stop();
         exitMediaPlayer.reset();
@@ -1207,7 +1219,6 @@ public class numerous extends Activity {
         startupMediaPlayer.reset();
         startupMediaPlayer.release();
         startupMediaPlayer = null;
-//        System.exit(0);     // Avoid memory full if user presses back button then starts from task mgr.
     }
 }
 
