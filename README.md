@@ -20,3 +20,5 @@ In all, four types of animation are used:
  - lateral animation to move numbers up/down/left/right
 
 See todo's in numerous.java for more details.
+
+Download it for free on [Google Play Store](https://play.google.com/store/apps/details?id=com.code_read.numerous)
